@@ -38,4 +38,4 @@ Código feito para solução de sistemas lineares com fatoração LU
 - Agora basta executar o código no mesmo diretório onde se encontrar o arquivo excel
 
 # Exemplo do código funcionando
-<img src="./images/exec_codigo.png">
+<img src="./images/nova_saida.png">
