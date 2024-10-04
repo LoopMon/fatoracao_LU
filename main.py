@@ -1,3 +1,5 @@
+import pandas as pd
+import numpy as np
 from time import time
 
 def exibirMatrizQuadrada(matriz):
@@ -10,46 +12,33 @@ def exibirMatrizQuadrada(matriz):
 # Para ajudar a calcular o tempo de execução
 start_time = time()
 
-# vetores e matrizes do programa
-matrizA = []
-matrizB = []
-x = []
+# Ler os dados do arquivo Excel
+arquivo_excel = 'dados.xlsx'  
+
+# Leitura das planilhas do Excel 
+#   - o arquivo deve ter 2 planilhas
+#   - os nomes das planilhas devem ser A e B respectivamente
+#   - planilha A: deve contar os coeficientes do sistema
+#   - planilha B: deve conter os termos independentes do sistema em coluna
+df_matrizA = pd.read_excel(arquivo_excel, sheet_name='A', header=None)
+df_matrizB = pd.read_excel(arquivo_excel, sheet_name='B', header=None)
+
+# DataFrames para arrays do NumPy
+matrizA = df_matrizA.to_numpy()
+matrizB = df_matrizB.to_numpy().flatten()  # vetor B como um array 1D
+
+# Dimensão da matriz a partir da matriz A
+dimMatriz = matrizA.shape[0]
+
+# Inicializar vetores e matrizes necessários
+x = np.zeros(dimMatriz)
 y = []
-l = []
-aux = []
-
-dimMatriz = int(input("Informe a dimensão da matriz: "))
-
-# A partir da dimensão informada:
-#   - matrizA vai ter o número de linhas igual a dimMatriz (cada linha é um vetor)
-#   - vetor X vai ter o número de linhas igual a dimMatriz
-for i in range(dimMatriz):
-    matrizA.append([])
-    x.append(0)
-
-
-print(f"{' LEITURA MATRIZES':=^30}")
-print("-= Informe a Matriz A:")
-for i in range(0, dimMatriz):
-    for j in range(0, dimMatriz):
-        coeficiente = int(input(f"coeficiente a{i+1}{j+1}: "))
-        matrizA[i].append(coeficiente)
-
-        aux.append(0)
-    # preenchendo matriz L para ter a mesma dimensão da matrizA
-    l.append(aux[:])
-    aux = []
-
-print("\n-= Informe a Matriz B:")
-for i in range(0, dimMatriz):
-    valor = int(input(f"valor de a{i+1}{j+1}: "))
-    matrizB.append(valor)
-
+l = np.zeros_like(matrizA, dtype=float)
 
 print("\nMatriz A:")
 exibirMatrizQuadrada(matrizA)
 
-# transformação matriz p/ triangular superior
+# Transformação da matriz para triangular superior (Fatoração LU)
 i = 1
 j = 0
 cont = 0
@@ -83,46 +72,45 @@ while i < dimMatriz:
         if cont >= dimMatriz - 1:
             break
 
-# Criar matriz L
-# Preenchar diagonal principal (1) e area triangular (0)
-for i in range(0, dimMatriz):
-    for j in range(0, dimMatriz):
+# Preencher diagonal principal de L com 1 e triangular superior com 0
+for i in range(dimMatriz):
+    for j in range(dimMatriz):
         if i == j:
             l[i][j] = 1
         elif j > i:
             l[i][j] = 0
 
-#Ly = b
+# Resolver Ly = B
 y.append(matrizB[0])
 resultado = 0
 for i in range(1, dimMatriz):
-    for j in range(0, i):
+    for j in range(i):
         resultado += l[i][j] * y[j]
     y.append(matrizB[i] - resultado)
     resultado = 0
 
-#Ux = y
-x[len(x)-1] = y[len(y)-1] / matrizA[dimMatriz-1][dimMatriz-1]
+# Resolver Ux = y
+x[dimMatriz-1] = y[dimMatriz-1] / matrizA[dimMatriz-1][dimMatriz-1]
 for i in range(dimMatriz-2, -1, -1):
     for j in range(dimMatriz-1, i-1, -1):
         resultado += matrizA[i][j] * x[j]
-    x[i] = (y[i] - resultado) / matrizA[i][j]
+    x[i] = (y[i] - resultado) / matrizA[i][i]
     resultado = 0
 
-print("Matriz U:")
+print("\nMatriz U:")
 exibirMatrizQuadrada(matrizA)
-print("Matriz L:")
+print("\nMatriz L:")
 exibirMatrizQuadrada(l)
 
 print("\nMatriz Y:")
-for i in range(0, dimMatriz):
+for i in range(dimMatriz):
     print(f'{y[i]:^7.2f}', end=" ")
 
-print("\nMatriz X:")
-for i in range(0, dimMatriz):
+print("\n\nMatriz X (solução do sistema):")
+for i in range(dimMatriz):
     print(f'{x[i]:^7.2f}', end=" ")
 
-print("\n\nTempo de execução:")
+# Exibir tempo de execução
 end_time = time()
 execution_time = end_time - start_time
-print(f'{execution_time = :.6f}')
+print(f'\n\nTempo de execução: {execution_time:.6f} segundos')
